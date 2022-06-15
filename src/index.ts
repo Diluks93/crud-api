@@ -1,11 +1,25 @@
 import { createServer } from 'http';
 import { config } from 'dotenv';
+import { EOL } from 'os';
+import { controller } from './controllers/userController.js';
 
-const message = 'Hello World!';
+const { getUsers, getUser } = controller;
+
+const server = createServer((req, res) => {
+  if (req.url === '/api/users' && req.method === 'GET') {
+    getUsers(req, res);
+  } else if (req.url?.match(/\/api\/users\/\d+/) && req.method === 'GET') {
+    const id = req.url?.split('/')[3] as string;
+    getUser(req, res, id);
+  } else {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: 'Route not found' }));
+  }
+});
+
 config();
-createServer(function (request, response) {
-  console.log(message);
-  response.end(message);
-}).listen(process.env.PORT, () => {
-  console.log('Сервер начал прослушивание порта ' + process.env.PORT);
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  process.stdout.write(`Server listening on port ${PORT}` + EOL);
 });
