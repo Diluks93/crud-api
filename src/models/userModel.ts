@@ -1,3 +1,5 @@
+import { v4, validate } from 'uuid';
+
 import { User } from '../types/interfaces';
 
 class Model {
@@ -5,15 +7,14 @@ class Model {
    * @description {db} - The in-memory database
    * @type {User[]}
    */
-  #db: User[] = [];
-
+  static #db: User[] = [];
   /**
    * @description - Gets all users
    * @returns {User[]} - The users
    */
   findAll: () => Promise<User[]> = (): Promise<User[]> => {
     return new Promise((resolve) => {
-      resolve(this.#db);
+      resolve(Model.#db);
     });
   };
 
@@ -26,10 +27,22 @@ class Model {
    */
   findById = (id: string): Promise<User | undefined> => {
     return new Promise((resolve) => {
-      const user = this.#db.find((user) => user.id === id);
-      resolve(user);
+      if (validate(id)) {
+        const user = Model.#db.find((user) => user.id === id);
+        resolve(user);
+      } else {
+        throw new Error('Invalid user id');
+      }
     });
   };
+
+  create(user: Omit<User, 'id'>): Promise<User> {
+    return new Promise((resolve) => {
+      const newUser = { id: v4(), ...user };
+      Model.#db.push(newUser);
+      resolve(newUser);
+    });
+  }
 }
 
 export const model = new Model();
