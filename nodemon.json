@@ -1,8 +1,6 @@
 {
   "ignore": [".git", "node_modules/", "dist/", "coverage/", "src/**/*.spec.ts"],
   "watch": ["src/**/*.ts"],
-  "execMap": {
-    "ts": "node --loader ts-node/esm"
-  },
+  "exec": "npm start",
   "ext": "ts"
 }

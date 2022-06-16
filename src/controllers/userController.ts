@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { model } from '../models/userModel.js';
+import { model } from '../models/userModel';
 
 const { findAll, findById } = model;
 
@@ -18,9 +18,7 @@ class Controller {
       res.end(JSON.stringify(users));
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(
-        JSON.stringify({ message: 'Something went wrong on the server' })
-      );
+      res.end(JSON.stringify({ message: 'Something went wrong on the server' }));
     }
   }
 
@@ -35,11 +33,7 @@ class Controller {
    * @throws {Error} - If the user id is not a valid string
    * @throws {Error} - If the user id is not found
    */
-  async getUser(
-    req: IncomingMessage,
-    res: ServerResponse,
-    id: string
-  ): Promise<void> {
+  async getUser(req: IncomingMessage, res: ServerResponse, id: string): Promise<void> {
     try {
       const user = await findById(id);
 
@@ -52,9 +46,7 @@ class Controller {
       }
     } catch (error) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(
-        JSON.stringify({ message: 'Something went wrong on the server' })
-      );
+      res.end(JSON.stringify({ message: 'Something went wrong on the server' }));
     }
   }
 }

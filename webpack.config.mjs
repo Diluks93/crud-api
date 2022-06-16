@@ -2,7 +2,8 @@ import { resolve } from 'node:path';
 
 const config = {
   mode: 'production',
-  entry: resolve('./src/index.ts'),
+  entry: resolve('./index.ts'),
+  target: 'node',
   output: {
     filename: 'bundle.js',
     path: resolve('dist')
