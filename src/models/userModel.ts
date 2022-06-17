@@ -36,11 +36,37 @@ class Model {
     });
   };
 
+  /**
+   * @description - Creates a user
+   * @param {User} user - The user
+   * @returns {User} - The user
+   */
   create(user: Omit<User, 'id'>): Promise<User> {
     return new Promise((resolve) => {
       const newUser = { id: v4(), ...user };
       Model.#db.push(newUser);
       resolve(newUser);
+    });
+  }
+
+  /**
+   * @description - Updates a user
+   * @param {string} id - The user id
+   * @param {User} user - The user
+   * @returns {User} - The user
+   */
+  update(id: string, user: Omit<User, 'id'>): Promise<User> {
+    return new Promise((resolve) => {
+      const index = Model.#db.findIndex((user) => user.id === id);
+      Model.#db[index] = { id, ...user };
+      resolve(Model.#db[index]);
+    });
+  }
+
+  remove(id: string): Promise<void> {
+    return new Promise((resolve) => {
+      Model.#db = Model.#db.filter((user) => user.id !== id);
+      resolve();
     });
   }
 }
