@@ -1,5 +1,6 @@
 import { v4, validate } from 'uuid';
 
+import { AppError } from '../controllers/appError';
 import { User } from '../types/interfaces';
 
 class Model {
@@ -31,7 +32,7 @@ class Model {
         const user = Model.#db.find((user) => user.id === id);
         resolve(user);
       } else {
-        throw new Error('Invalid user id');
+        throw new AppError('Invalid user id');
       }
     });
   };

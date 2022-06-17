@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { model } from '../models/userModel';
 import { User } from '../types/interfaces';
+import { AppError } from './appError';
 
 const { findAll, findById, create, update, remove } = model;
 
@@ -8,33 +9,31 @@ class Controller {
   /**
    * @description - Gets all users
    * @route GET /api/users
-   * @param {IncomingMessage} _ - The request object
    * @param {ServerResponse} res - The response object
    * @returns {void}
+   * @memberof Controller
    */
-  async getUsers(_: IncomingMessage, res: ServerResponse): Promise<void> {
+  async getUsers(res: ServerResponse): Promise<void> {
     try {
       const users = await findAll();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(users));
     } catch (error) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: 'Something went wrong on the server' }));
+      Controller.handlerError(error as AppError, res);
     }
   }
 
   /**
    * @description - Gets a user by id
    * @route GET /api/users/:id
-   * @param {IncomingMessage} _ - The request object
    * @param {ServerResponse} res - The response object
    * @param {string} id - The user id
    * @returns {void}
    * @memberof Controller
-   * @throws {Error} - If the user id is not a valid string
-   * @throws {Error} - If the user id is not found
+   * @throws {AppError} - If the user id is not a valid string
+   * @throws {AppError} - If the user id is not found
    */
-  async getUser(_: IncomingMessage, res: ServerResponse, id: string): Promise<void> {
+  async getUser(res: ServerResponse, id: string): Promise<void> {
     try {
       const user = await findById(id);
 
@@ -46,8 +45,7 @@ class Controller {
         res.end(JSON.stringify(user));
       }
     } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: (error as Error).message }));
+      Controller.handlerError(error as AppError, res);
     }
   }
   /**
@@ -76,8 +74,7 @@ class Controller {
       res.writeHead(201, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ user }));
     } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: (error as Error).message }));
+      Controller.handlerError(error as AppError, res);
     }
   }
 
@@ -112,18 +109,16 @@ class Controller {
         };
         await update(id, userData);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'User updated' }));
+        res.end(JSON.stringify(userData));
       }
     } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: (error as Error).message }));
+      Controller.handlerError(error as AppError, res);
     }
   }
 
   /**
    * @description - Remove a user by id
    * @route DELETE /api/users/:id
-   * @param {IncomingMessage} req - The request object
    * @param {ServerResponse} res - The response object
    * @param {string} id - The user id
    * @returns {void}
@@ -131,7 +126,7 @@ class Controller {
    * @throws {Error} - If the user id is not a valid string
    * @throws {Error} - If the user id is not found
    */
-  async removeUser(_: IncomingMessage, res: ServerResponse, id: string): Promise<void> {
+  async removeUser(res: ServerResponse, id: string): Promise<void> {
     try {
       const user = await findById(id);
 
@@ -144,8 +139,17 @@ class Controller {
         res.end(JSON.stringify({ message: `User ${user.username} removed` }));
       }
     } catch (error) {
+      Controller.handlerError(error as AppError, res);
+    }
+  }
+
+  private static handlerError({ name, message }: AppError, res: ServerResponse): void {
+    if (name === 'AppError') {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: (error as Error).message }));
+      res.end(JSON.stringify({ message: message }));
+    } else {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: 'Something went wrong on the server' }));
     }
   }
 
@@ -154,7 +158,7 @@ class Controller {
     res: ServerResponse,
     isMethodPOST = true,
   ): Promise<Omit<User, 'id'> | undefined> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       try {
         let body = '';
         req
@@ -164,11 +168,16 @@ class Controller {
           .on('end', () => {
             if (isMethodPOST) resolve(Controller.checkRequiredFields(body, res));
             else {
-              resolve(JSON.parse(body));
+              try {
+                const data = JSON.parse(body);
+                resolve(data);
+              } catch (error) {
+                Controller.handlerError(error as AppError, res);
+              }
             }
           });
       } catch (error) {
-        reject(error);
+        Controller.handlerError(error as AppError, res);
       }
     });
   };
@@ -188,16 +197,15 @@ class Controller {
       const user: Omit<User, 'id'> = JSON.parse(body);
       const len = Object.keys(user).length;
       if (len < 3) {
-        throw new Error('Missing required fields');
+        throw new AppError('Missing required fields');
       } else if (len > 3) {
-        throw new Error('Too many fields');
+        throw new AppError('Too many fields');
       } else {
         Controller.checkKeysUser(user);
         return user;
       }
     } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: (error as Error).message }));
+      Controller.handlerError(error as AppError, res);
     }
   }
 
@@ -214,7 +222,7 @@ class Controller {
       const keys = ['username', 'age', 'hobbies'];
       for (let i = 0; i < Object.keys(user).length; i++) {
         if (!keys.includes(Object.keys(user)[i])) {
-          throw new Error(`Missing required field ${keys[i]}`);
+          throw new AppError(`Missing required field ${keys[i]}`);
         }
       }
       Controller.checkFieldUsername(user);
@@ -235,9 +243,14 @@ class Controller {
    * @throws {Error} - If the username field is not valid
    */
   private static checkFieldUsername({ username }: Omit<User, 'id'>): void {
+    if (!username) {
+      return;
+    }
     try {
       if (typeof username !== 'string') {
-        throw new Error('The username field must be a string');
+        throw new AppError('The username field must be a string');
+      } else if (username.length > 33) {
+        throw new AppError('The username field must be less than 32 characters');
       }
     } catch (error) {
       if (error) {
@@ -254,9 +267,14 @@ class Controller {
    * @throws {Error} - If the age field is not valid
    */
   private static checkFieldAge({ age }: Omit<User, 'id'>): void {
+    if (!age) {
+      return;
+    }
     try {
       if (typeof age !== 'number') {
-        throw new Error('The age field must be a number');
+        throw new AppError('The age field must be a number and less than 150');
+      } else if (age > 150) {
+        throw new AppError('The age field must be less than 150');
       }
     } catch (error) {
       if (error) {
@@ -275,19 +293,26 @@ class Controller {
    * @throws {Error} - If the hobbies field is not a valid type
    */
   private static checkFieldHobbies({ hobbies }: Omit<User, 'id'>): void {
+    if (!hobbies) {
+      return;
+    }
+    const len = hobbies.length;
+    const isHobbiesOfTypeString = Controller.isArrayOfTypeString(Object.values(hobbies));
     try {
-      if (
-        !Array.isArray(hobbies) ||
-        hobbies.length === 0 ||
-        Object.values(hobbies).every((hobby) => typeof hobby !== 'string')
-      ) {
-        throw new Error('The hobby field must be of type array of strings');
+      if (!Array.isArray(hobbies)) {
+        throw new AppError('The hobby field must be of type array of strings ore empty');
+      } else if (len !== 0 && isHobbiesOfTypeString) {
+        throw new AppError('The hobby field must be of type array of strings ore empty');
       }
     } catch (error) {
       if (error) {
         throw error;
       }
     }
+  }
+
+  private static isArrayOfTypeString(array: string[]): boolean {
+    return array.every((el) => typeof el !== 'string');
   }
 }
 

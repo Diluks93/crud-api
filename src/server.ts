@@ -1,30 +1,42 @@
 import { createServer } from 'http';
+
 import { controller } from './controllers/userController';
 
 const { getUsers, getUser, createUser, updateUser, removeUser } = controller;
 
+const getId = (str: string): string => {
+  return str.split('/')[3];
+};
+
+const findMatch = (str: string, matcher: RegExp): boolean => {
+  return str.match(matcher) !== null;
+};
+
 export const server = createServer(async (req, res) => {
-  req.on('error', (err) => {
-    console.error(err);
-    res.statusCode = 400;
-    res.end();
+  req.on('error', () => {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: 'Something went wrong on the server' }));
   });
-  res.on('error', (err) => {
-    console.error(err);
+  res.on('error', () => {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: 'Something went wrong on the server' }));
   });
-  if (req.url === '/api/users' && req.method === 'GET') {
-    getUsers(req, res);
-  } else if (req.url?.match(/\/api\/users\/\d+/) && req.method === 'GET') {
-    const id = req.url?.split('/')[3] as string;
-    getUser(req, res, id);
-  } else if (req.url === '/api/users' && req.method === 'POST') {
+
+  const ENDPOINT = '/api/users';
+  const URL = req.url || '';
+  const regex = /\/api\/users\/\d+/;
+  const id = getId(URL);
+
+  if (URL === ENDPOINT && req.method === 'GET') {
+    getUsers(res);
+  } else if (findMatch(URL, regex) && req.method === 'GET') {
+    getUser(res, id);
+  } else if (URL === ENDPOINT && req.method === 'POST') {
     createUser(req, res);
-  } else if (req.url?.match(/\/api\/users\/\d+/) && req.method === 'PUT') {
-    const id = req.url?.split('/')[3] as string;
+  } else if (findMatch(URL, regex) && req.method === 'PUT') {
     updateUser(req, res, id);
-  } else if (req.url?.match(/\/api\/users\/\d+/) && req.method === 'DELETE') {
-    const id = req.url?.split('/')[3] as string;
-    removeUser(req, res, id);
+  } else if (findMatch(URL, regex) && req.method === 'DELETE') {
+    removeUser(res, id);
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ message: 'Route not found' }));
