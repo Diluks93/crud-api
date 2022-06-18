@@ -272,7 +272,7 @@ class Controller {
     }
     try {
       if (typeof age !== 'number') {
-        throw new AppError('The age field must be a number and less than 150');
+        throw new AppError('The age field must be a number');
       } else if (age > 150) {
         throw new AppError('The age field must be less than 150');
       }
