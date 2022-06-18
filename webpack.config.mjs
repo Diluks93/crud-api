@@ -6,18 +6,25 @@ const config = {
   target: 'node',
   output: {
     filename: 'bundle.js',
-    path: resolve('dist')
+    path: resolve('dist'),
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
   },
   module: {
-    rules: [
-      { test: /\.ts$/, loader: 'ts-loader', exclude: /node_modules/,}
-    ]
+    rules: [{ test: /\.ts$/, loader: 'ts-loader', exclude: /node_modules/ }],
   },
-  devtool: 'inline-source-map'
 };
 
+export default (env, argv) => {
+  if (argv.mode === 'development') {
+    config.mode = 'development';
+    config.devtool = 'inline-source-map';
+  }
 
-export default config;
+  if (argv.mode === 'production') {
+    config.mode = 'production';
+  }
+
+  return config;
+};
