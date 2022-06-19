@@ -2,14 +2,14 @@
   "name": "crud-api",
   "version": "1.0.0",
   "description": "This is app implement simple CRUD API using in-memory database underneath",
-  "main": "index.js",
   "scripts": {
     "start:dev": "nodemon -w",
     "start:prod": "npm run lint && npm run build && node dist/bundle.js",
     "start": "ts-node index.ts",
-    "build": "webpack",
+    "build": "webpack --mode production",
     "lint": "eslint . --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "start:multi": "ts-node src/multi.ts"
   },
   "repository": {
     "type": "git",

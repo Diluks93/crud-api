@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
 
 const config = {
-  mode: 'production',
   entry: resolve('./index.ts'),
   target: 'node',
   output: {
