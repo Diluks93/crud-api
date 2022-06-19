@@ -79,4 +79,10 @@ describe('The third scenario', () => {
     response = await request(server).put(`/api/users/${users.body[0].id}`).send('{"username": "test",,}');
     expect(response.body.message).toBe('Something went wrong on the server');
   });
+
+  it('Show message "Route not found"', async () => {
+    const response = await request(server).get('/some-non/existing/resource');
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe(`Route not found`);
+  });
 });

@@ -45,20 +45,20 @@ describe('The second scenario', () => {
     expect(response.body.message).toBe('Invalid user id');
   });
 
-  it('GET: should answer with status code 404', async () => {
+  it('GET: should answer with status code 400', async () => {
     const users = await request(server).get('/api/users');
     const id = users.body[0].id.split('-').reverse().join('-');
     const response = await request(server).get(`/api/users/${id}`);
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('message');
-    expect(response.body.message).toBe(`Route not found`);
+    expect(response.body.message).toBe(`Invalid user id`);
   });
 
-  it('DELETE: should answer with status code 404', async () => {
+  it('DELETE: should answer with status code 400', async () => {
     const users = await request(server).get('/api/users');
     const id = users.body[0].id.split('-').reverse().join('-');
     const response = await request(server).delete(`/api/users/${id}`);
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(400);
     expect(response.body).toHaveProperty('message');
   });
 

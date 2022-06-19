@@ -24,7 +24,7 @@ export const server = createServer(async (req, res) => {
 
   const ENDPOINT = '/api/users';
   const URL = req.url || '';
-  const regex = /\/api\/users\/\d+/;
+  const regex = /\/api\/users\/\w+/;
   const id = getId(URL);
 
   if (URL === ENDPOINT && req.method === 'GET') {
