@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3000;
 const pid = process.pid;
 
 if (cluster.isPrimary) {
+  cluster.schedulingPolicy = cluster.SCHED_RR;
   const count = os.cpus().length;
   process.stdout.write(`Primary pid: ${pid}${os.EOL}`);
   process.stdout.write(`Starting ${count} workers${os.EOL}`);
